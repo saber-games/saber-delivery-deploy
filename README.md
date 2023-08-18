@@ -1,2 +1,2 @@
-# sd-deploy
-Public repo for expirienced users
+# Saber Delivery Deployment repo
+Make your artifacts part of a larger system.
