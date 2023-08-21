@@ -1,0 +1,36 @@
+# https://torrust.com/torrust-tracker/config/
+# Do not edit ports! They are hardcoded into torrent files
+log_level = "trace"
+mode = "public"
+db_driver = "Sqlite3"
+db_path = "data.db"
+# db_driver=MySQL  db_path = mysql://USERNAME:PASSWORD@HOST:3306/DATABASE
+announce_interval = 120
+min_announce_interval = 30
+max_peer_timeout = 120
+on_reverse_proxy = false
+# torrust can only be used with public ip if it network card with public ip attached to vm directly without nat
+# should be set only if public ip present
+# external_ip = "1.1.1.1"
+tracker_usage_statistics = true
+persistent_torrent_completed_stat = true
+inactive_peer_cleanup_interval = 0
+remove_peerless_torrents = false
+
+[[udp_trackers]]
+enabled = true
+bind_address = "0.0.0.0:6971"
+
+[[http_trackers]]
+enabled = true
+bind_address = "0.0.0.0:6971"
+ssl_enabled = false
+# ssl_cert_path = "/etc/ssl/domain.tld/domain.tld.crt"
+# ssl_key_path = "/etc/ssl/domain.tld/domain.tld.key"
+
+[http_api]
+enabled = true
+bind_address = "0.0.0.0:1212"
+
+[http_api.access_tokens]
+admin = "RetrackerAdminAPI000"

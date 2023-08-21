@@ -1,0 +1,105 @@
+---
+- name: Docker installation on Debian with Ansible support
+  hosts: "{{ target | default('all') }}"
+  #become: yes
+  vars:
+    docker_repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution|lower }} {{ ansible_distribution_release }} stable"
+
+  tasks:
+    - name: Docker installation prerequisites
+      apt:
+        name:
+          - apt-transport-https
+          - software-properties-common
+          - ca-certificates
+          - curl
+          - gnupg2
+          - net-tools
+          # - libffi-dev pkg-config libssl-dev
+        state: present
+        update_cache: no
+
+    - name: Add Docker repo GPG key
+      apt_key:
+        url: https://download.docker.com/linux/{{ ansible_distribution|lower }}/gpg
+        state: present
+
+    - name: Add Docker apt repo
+      apt_repository:
+        repo: "{{ docker_repo }}"
+        state: present
+        filename: docker
+        update_cache: yes
+
+    - name: Docker installation prerequisites with Ansible support
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+          - python3-pip
+          - python3-cffi
+          - python3-requests
+          - python3-docker
+          - python3-compose
+        state: present
+        update_cache: no
+
+    - name: Docker version verify
+      command: docker -v
+      register: docker_v
+
+    - name: Out version
+      debug:
+        var: docker_v.stdout_lines
+
+    - name: Make dir
+      file:
+        path: /opt/docker
+        state: directory
+        owner: root
+        group: root
+
+    - name: Copy files
+      copy:
+        src: "{{ item }}"
+        dest: /opt/docker/
+        owner: root
+        group: root
+        mode: "0774"
+      with_items:
+        - ["create-containers.sh", "update-containers.sh"]
+
+    - name: Copy docker daemon config files
+      copy:
+        src: "{{ item }}"
+        dest: /etc/docker/
+        owner: root
+        group: root
+        mode: "0770"
+      with_items:
+        - ["daemon.json"]
+      notify:
+        - Restart docker
+
+    - name: Enable docker systemd service
+      service:
+        name: "docker"
+        state: "started"
+        enabled: "yes"
+        
+    - name: Create docker-compose file, linked to docker compose plugin
+      copy:
+        dest: "/usr/bin/docker-compose"
+        content: |
+          docker compose "$@"
+        owner: root
+        group: root
+        mode: '0774'
+
+  handlers:
+    - name: Restart docker
+      service:
+        name: "docker"
+        state: "restarted"

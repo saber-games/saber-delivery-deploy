@@ -1,0 +1,47 @@
+---
+- name: docker image prune - remove dangling images
+  hosts: "{{ target | default('all') }}"
+  #become: yes
+  vars:
+
+  tasks:
+    - name: populate service facts
+      service_facts:
+
+    - name: get facts mounts
+      set_fact:
+        mount: "{{ ansible_mounts | first }}"
+
+    #- name: get mounts
+    #  debug:
+    #    msg: "{{ mount.size_available }}"
+
+
+    #- set_fact: disk_usage="{{ mount.size_total - mount.size_available }}"
+    - set_fact: disk_free_before="{{ mount.size_available }}"
+
+    - name: prune unused images
+      community.docker.docker_prune:
+        images: true
+        images_filters:
+          dangling: true
+      ignore_errors: yes
+      when:
+        - ansible_facts.services['docker'] is defined
+
+    - name: upd facts
+      setup:
+
+    - name: get facts after
+      set_fact:
+        mount: "{{ ansible_mounts | first }}"
+
+    - set_fact: disk_free_after="{{ mount.size_available }}"
+
+    #- name: get mounts after
+    #  debug:
+    #    msg: "{{ mount.size_available }}"
+
+    - name: show message after
+      debug:
+        msg: "cleaned from / {{ ((disk_free_after | int - disk_free_before | int ) / 1024|pow(2)) | int }} MB"

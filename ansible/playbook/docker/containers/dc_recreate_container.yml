@@ -1,0 +1,32 @@
+# for 1 container as argument.
+# by default our docker-compose contains one service per container, so pass one service name to playbook
+# ansible-playbook dc_recreate_container.yml --extra-vars '{"service":"qbittorrent"}'
+
+---
+- name: Docker-compose recreate one container
+  hosts: "{{ target | default('all') }}"
+  ignore_unreachable: yes
+  #become: yes
+  vars:
+    docker_compose_file: "/opt/docker/docker-compose.yml"
+    docker_compose_dir: "{{ docker_compose_file | dirname }}"
+
+  tasks:
+    - fail: msg="Error if service is not defined. You should pass it  --extra-vars '{\"service\":\"qbittorrent\"}'"
+      when: service is not defined
+
+    - name: check "{{ docker_compose_file }}" exist
+      stat:
+        path: "{{ docker_compose_file }}"
+      register: dcyml
+
+    - name: pull and recreate images
+      community.docker.docker_compose:
+        project_src: "{{ docker_compose_dir }}"
+        pull: true
+        # recreate: smart
+        recreate: always
+        state: present
+        services: "{{ service }}"
+      when:
+        - dcyml.stat.exists

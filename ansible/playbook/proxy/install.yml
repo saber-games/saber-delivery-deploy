@@ -1,0 +1,98 @@
+---
+- name: SD Proxy installation in docker
+  hosts: "{{ target | default('all') }}"
+  vars:
+    env_type: "prod"
+    app_image_label: "latest"
+    api_token: "{{ undef(hint='You must specify api_token provided to the new server') }}"
+    api_url: "{{ undef(hint='You must specify api_url provided to you') }}"
+    qbt_login: "proxy"
+    qbt_password: "{{ undef(hint='You must specify qbt_password') }}"
+    qbt_url: "http://host.docker.internal:8282"
+    data_dir: "/raid/proxy"
+    storage_path: "{{ data_dir }}"
+    docker_dir: "/opt/docker"
+    docker_proxy_repo: ""
+    config_dir: "/opt/docker/data"
+    app_logs_dir: "{{ config_dir}}/sd-proxy-scheduler/logs"
+    qbt_profiles_dir: "{{ config_dir }}/qbt/profiles"
+    qbt_config_dir: "{{ qbt_profiles_dir }}/qBittorrent_proxy/config" # special qbt config proxy for sd-proxy
+    #
+  ignore_unreachable: yes
+  #become: yes
+
+
+  pre_tasks:
+    - name: check qbt_password
+      assert:
+        that: qbt_password | length > 14
+        fail_msg: "Check qbt_password length, must be > 14"
+        quiet: true
+
+    - name: check data_dir
+      assert:
+        that: data_dir is not match('.*/$')
+        fail_msg: "Remove data_dir trailing slash"
+        quiet: true
+
+  tasks:
+    - name: generate password hash for qBittorrent config
+      script:
+        cmd: ./../scripts/userpass.py {{ qbt_password }}
+        executable: /usr/bin/python3
+      delegate_to: localhost
+      register: qbt_password_hashed
+
+    - debug:
+        msg: "Original pass: {{ qbt_password}}; salted hash for qbt config: {{ qbt_password_hashed.stdout_lines }}"
+
+
+  tasks:
+    - name: create dirs
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0644
+      with_items:
+        - "{{ data_dir }}"
+        - "{{ app_logs_dir }}"
+        - "{{ qbt_config_dir }}"
+
+    - name: Generate files for proxy
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      with_items:
+        - {
+            src: "docker-compose.yml.j2",
+            dest: "{{ docker_dir }}/docker-compose.yml",
+            mode: "0644",
+          }
+        - {
+            src: "qBittorrent.conf.j2",
+            dest: "{{ qbt_config_dir }}/qBittorrent.conf",
+            mode: "0644",
+          }
+      notify:
+        - Recreate containers
+
+    - name: Pull and recreate containers
+      community.docker.docker_compose:
+        project_src: "{{ docker_dir }}"
+        pull: true
+        state: present
+        recreate: smart
+        # recreate: always
+
+
+  handlers:
+    - name: Recreate containers
+      community.docker.docker_compose:
+        project_src: "{{ docker_dir }}"
+        pull: true
+        state: present
+        recreate: always
+

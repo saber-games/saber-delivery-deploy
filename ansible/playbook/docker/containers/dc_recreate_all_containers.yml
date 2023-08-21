@@ -1,0 +1,30 @@
+---
+- name: Docker compose pull and recreate containers i.e. upgrade
+  hosts: "{{ target | default('all') }}"
+  ignore_unreachable: yes
+  #become: yes
+  vars:
+    docker_compose_file: "/opt/docker/docker-compose.yml"
+    create_file: "/opt/docker/create-containers.sh"
+    docker_compose_dir: {{ docker_compose_file | dirname }}
+
+  tasks:
+    - name: check {{ docker_compose_file }} exist
+      stat:
+      path: {{ docker_compose_file }}
+      register: dcyml
+    
+#    - name: check {{ create_file }} exist
+#      stat:
+#      path: {{ create_file }}
+#      register: ccfile
+
+    - name: Pull and recreate images
+      community.docker.docker_compose:
+        project_src: {{ docker_compose_dir }}
+        pull: true
+        state: present
+        recreate: smart
+        # recreate: always
+      when:
+        - dcyml.stat.exists

@@ -1,0 +1,14 @@
+[Unit]
+Description=retracker-local
+# After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/torrust-tracker
+ExecStart=/opt/torrust-tracker/torrust-tracker
+# User=root
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

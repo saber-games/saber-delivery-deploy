@@ -1,0 +1,75 @@
+---
+- name: Torrust-tracker installation on Debian
+  hosts: "{{ target | default('all') }}"
+  #become: yes
+  vars:
+    exec_url: https://dl.saber3d.net/torrust-tracker/torrust-tracker
+    libssl_11_deb_url: http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb
+    app_dir: /opt/torrust-tracker
+  tasks:
+    - name: Torrust-tracker installation prerequisites for Debian < 12
+      apt:
+        name:
+          - libssl1.1
+      when: ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_major_version'] < 12
+        
+    - name: Torrust-tracker installation prerequisites for Debian >= 12
+      apt:
+        deb: "{{ libssl_11_deb_url }}"
+      when: ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_major_version'] >= 12
+  
+    - name: Make dir
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: root
+        group: root
+
+    - name: Copy files
+      copy:
+        src: "{{ item }}"
+        dest: "{{ app_dir }}"
+        owner: root
+        group: root
+        mode: "0644"
+      with_items:
+        - ["config.toml"]
+      notify:
+        - Restart torrust-tracker service
+
+    - name: Get torrust-tracker exec from url
+      get_url:
+        url: "{{ exec_url }}"
+        dest: "{{ app_dir }}"
+        mode: "0775"
+      notify:
+        - Restart torrust-tracker service
+
+    - name: Copy systemd files
+      copy:
+        src: "{{ item }}"
+        dest: /etc/systemd/system
+        owner: root
+        group: root
+        mode: "0644"
+      with_items:
+        - ["torrust-tracker.service"]
+      notify:
+        - daemon-reload
+
+    - name: Enable torrust-tracker Systemd service
+      service:
+        name: torrust-tracker
+        state: started
+        enabled: true
+        
+
+  handlers:
+    - name: daemon-reload
+      systemd:
+        daemon_reload: true
+        
+    - name: Restart torrust-tracker service
+      systemd:
+        name: torrust-tracker
+        state: restarted

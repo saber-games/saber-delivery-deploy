@@ -1,0 +1,45 @@
+version: '3.9'
+services:
+  sd-proxy-scheduler:
+    container_name: sd-proxy-scheduler
+    image: {{ docker_proxy_repo }}saberinteractive/sd-proxy:{{ app_image_label }}
+    restart: always
+    environment:
+      API_TOKEN: {{ api_token }}
+      API_URL: {{ api_url }}
+      STORAGE_PATH: {{ storage_path }}
+      QBT_LOGIN: {{ qbt_login }}
+      QBT_PASSWORD: {{ qbt_password }}
+      QBT_URL: {{ qbt_url }}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+      - {{ app_logs_dir }}:/app/api/storage/logs
+      - {{ data_dir }}:{{ storage_path }}
+    tmpfs:
+      - /tmp
+      - /var/lib/php/sessions
+
+  qbittorrent:
+    image: {{ docker_proxy_repo }}saberinteractive/qbittorrent:latest
+    container_name: qbittorrent
+    restart: always
+    # the network must be in host mode for the torrust-tracker to work properly
+    network_mode: host
+    cap_add:
+      - ALL
+    volumes:
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+      - {{ qbt_profiles_dir }}:/opt/qbittorrent/profiles
+      - {{ data_dir }}:{{ storage_path }} # this path also in qbt config
+    environment:
+      QBT_PROFILE_NAME: proxy
+      QBT_PORT_WEBUI: 8282
+      QBT_PORT_NAT: 1337
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tmpfs:
+      - /tmp
