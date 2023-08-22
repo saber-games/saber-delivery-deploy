@@ -31,7 +31,7 @@
         filename: docker
         update_cache: yes
 
-    - name: Docker installation prerequisites with Ansible support
+    - name: Docker installation prerequisites
       apt:
         name:
           - docker-ce
@@ -39,12 +39,29 @@
           - containerd.io
           - docker-compose-plugin
           - python3-pip
+        state: present
+        update_cache: no
+
+    - name: Install prerequisites for Ansible support for Debian < 12
+      pip:
+        name:
+          - cffi
+          - requests
+          - docker
+          - docker-compose
+        state: present
+      when: ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_major_version'] | int < 12
+
+    - name: Install prerequisites for Ansible support for Debian >= 12
+      apt:
+        name:
           - python3-cffi
           - python3-requests
           - python3-docker
           - python3-compose
         state: present
         update_cache: no
+      when: ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_major_version'] | int >= 12
 
     - name: Docker version verify
       command: docker -v

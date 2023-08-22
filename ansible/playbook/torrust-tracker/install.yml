@@ -11,12 +11,12 @@
       apt:
         name:
           - libssl1.1
-      when: ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_major_version'] < 12
+      when: ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_major_version'] | int < 12
         
     - name: Torrust-tracker installation prerequisites for Debian >= 12
       apt:
         deb: "{{ libssl_11_deb_url }}"
-      when: ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_major_version'] >= 12
+      when: ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_major_version'] | int >= 12
   
     - name: Make dir
       file:
