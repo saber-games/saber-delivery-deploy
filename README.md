@@ -46,6 +46,10 @@ ansible-playbook -i $SERVER, --connection=local playbook/docker/install/docker_i
 
 # Installing SD-Proxy with qBittorrent in docker-compose
 ansible-playbook -i $SERVER, --connection=local playbook/proxy/install.yml --extra-vars  '{"api_token":"<provided token>", "api_url":"<provided api url>","data_dir":"</you/data/dir>", "docker_proxy_repo":"", "qbt_password":'${PASS}'}'
+
+# Optional: you can enable containers autoupdate on daily basis
+ansible-playbook -i $SERVER, --connection=local playbook/docker/containers/dc_autoupdate_containers.yml
+
 ```
 
 

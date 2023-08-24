@@ -1,0 +1,41 @@
+---
+- name: Docker compose autoupdate containers daily
+  hosts: "{{ target | default('all') }}"
+  ignore_unreachable: yes
+  vars:
+    docker_compose_file: "/opt/docker/docker-compose.yml"
+    update_sh_file: "/opt/docker/update-containers.sh"
+    docker_compose_dir: "{{ docker_compose_file | dirname }}"
+
+  
+  tasks:
+    - name: Get stat - {{ docker_compose_file }}
+      stat:
+        path: "{{ docker_compose_file }}"
+      register: dcyml
+
+    - name: Get stat - {{ update_sh_file }}
+      stat:
+        path: "{{ update_sh_file }}"
+      register: updsh
+
+    - name: Fail if {{ docker_compose_file }} not found
+      fail:
+        msg: "Error: {{ docker_compose_file }} does not exist!"
+      when: 
+        - dcyml.stat.exists == False
+    
+    - name: Fail if {{ update_sh_file }} not found
+      fail:
+        msg: "Error: {{ update_sh_file }} does not exist!"
+      when: 
+        - updsh.stat.exists == False
+
+    - name: Creates a cron file under /etc/cron.d
+      cron:
+        name: Docker compose autoupdate containers
+        minute: "0"
+        hour: "23"
+        user: root
+        job: "/opt/docker/update-containers.sh"
+        cron_file: dc_autoupdate_containers
