@@ -39,10 +39,10 @@
       script:
         cmd: ./../scripts/userpass.py {{ qbt_password }}
         executable: /usr/bin/python3
-      delegate_to: localhost
       register: qbt_password_hashed
 
-    - debug:
+    - name: Print qbt password and hash
+      debug:
         msg: "Original pass: {{ qbt_password}}; salted hash for qbt config: {{ qbt_password_hashed.stdout_lines }}"
 
     - name: Create dirs

@@ -32,6 +32,8 @@ You should get all tokens, urls before running these commands.
 
 You should generate password for qBittorrent > 14 chars or use your own.
 
+In our example, Ansible is installed and run locally.
+
 ```sh
 git clone https://github.com/saber-games/saber-delivery-deploy
 cd ./saber-delivery-deploy/ansible
@@ -42,9 +44,10 @@ SERVER=127.0.0.1
 # Installing Docker
 ansible-playbook -i $SERVER, --connection=local playbook/docker/install/docker_install.yml
 
-# Installing Proxy with qBittorrent in docker-compose
-ansible-playbook -i $SERVER, --connection=local playbook/proxy/install.yml --extra-vars  '{"target":"$SERVER", "api_token":"<provided token>", "api_url":"<provided api url>","data_dir":"</you/data/dir>", "docker_proxy_repo":"", "qbt_password":"$PASS"}'
+# Installing SD-Proxy with qBittorrent in docker-compose
+ansible-playbook -i $SERVER, --connection=local playbook/proxy/install.yml --extra-vars  '{"api_token":"<provided token>", "api_url":"<provided api url>","data_dir":"</you/data/dir>", "docker_proxy_repo":"", "qbt_password":'${PASS}'}'
 ```
+
 
 ### Retracker-local based on torrust-tracker deployment
 
@@ -54,6 +57,9 @@ ansible-playbook -i $SERVER, --connection=local playbook/proxy/install.yml --ext
 
 ```sh
 ansible-playbook -i $SERVER, --connection=local playbook/torrust-tracker/install.yml
+
+# Check service
+systemctl status torrust-tracker
 ```
 
 
