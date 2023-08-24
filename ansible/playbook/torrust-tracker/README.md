@@ -15,7 +15,7 @@ Check if ports 6971/tcp, 6971/udp are open in OS firewall
 
 After installation create A or CNAME record "retracker-local.saber3d.net" in your local DNS server pointing to the server running torrust-tracker service
 
-Restart qBittorrent after installation
+qBittorrent will be restarted after installation if found in running state
 
 Check new retracker work in the qBittorrent WebUI
 

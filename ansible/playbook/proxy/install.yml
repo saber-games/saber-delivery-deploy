@@ -19,24 +19,23 @@
     qbt_config_dir: "{{ qbt_profiles_dir }}/qBittorrent_proxy/config" # special qbt config proxy for sd-proxy
     #
   ignore_unreachable: yes
-  #become: yes
 
 
   pre_tasks:
-    - name: check qbt_password
+    - name: Check qbt_password
       assert:
         that: qbt_password | length > 14
         fail_msg: "Check qbt_password length, must be > 14"
         quiet: true
 
-    - name: check data_dir
+    - name: Check data_dir
       assert:
         that: data_dir is not match('.*/$')
         fail_msg: "Remove data_dir trailing slash"
         quiet: true
 
   tasks:
-    - name: generate password hash for qBittorrent config
+    - name: Generate password hash for qBittorrent config
       script:
         cmd: ./../scripts/userpass.py {{ qbt_password }}
         executable: /usr/bin/python3
@@ -46,9 +45,7 @@
     - debug:
         msg: "Original pass: {{ qbt_password}}; salted hash for qbt config: {{ qbt_password_hashed.stdout_lines }}"
 
-
-  tasks:
-    - name: create dirs
+    - name: Create dirs
       file:
         path: "{{ item }}"
         state: directory
@@ -60,7 +57,7 @@
         - "{{ app_logs_dir }}"
         - "{{ qbt_config_dir }}"
 
-    - name: Generate files for proxy
+    - name: Generate files for app
       template:
         src: "{{ item.src }}"
         dest: "{{ item.dest }}"

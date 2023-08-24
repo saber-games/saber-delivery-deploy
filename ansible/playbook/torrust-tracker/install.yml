@@ -36,6 +36,7 @@
         - ["config.toml"]
       notify:
         - Restart torrust-tracker service
+        - Restart qbittorrent
 
     - name: Get torrust-tracker exec from url
       get_url:
@@ -44,6 +45,7 @@
         mode: "0775"
       notify:
         - Restart torrust-tracker service
+        - Restart qbittorrent
 
     - name: Copy systemd files
       copy:
@@ -62,14 +64,30 @@
         name: torrust-tracker
         state: started
         enabled: true
-        
+
+    - name: Get qbittorrent container info
+      community.docker.docker_container_info:
+        name: qbittorrent
+      register: container_status
+
+    - name: Print information about container
+      debug:
+        var: container_status.container.State.Status
+      when: container_status
+      notify:
+        - Restart qbittorrent
+
 
   handlers:
     - name: daemon-reload
       systemd:
         daemon_reload: true
-        
+
     - name: Restart torrust-tracker service
       systemd:
         name: torrust-tracker
         state: restarted
+
+    - name: Restart qbittorrent
+      command: docker restart qbittorrent
+      when: container_status.container.State.Status == "running"
