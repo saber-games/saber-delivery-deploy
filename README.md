@@ -8,21 +8,25 @@ Make your artifacts part of a larger system.
 If you don't have the Ansible service in your infrastructure, you can install it locally. If Ansible is already available and in use, you can skip this step
 
 ```sh
+# for debian <12
 apt update
 apt install -y \
   python3-all \
   python3-pip
-
 pip install --upgrade pip
-# check
-pip -V
+pip install --upgrade ansible 
+# for debian >=12
+pipx install --include-deps ansible
 
-pip install --upgrade ansible
 ansible --version
 ```
 
 
 ## Server 1. Proxy
+
+- Prepare new server
+
+- Install Ansible as described above
 
 ### SD-Proxy deployment
 
@@ -37,7 +41,7 @@ In our example, Ansible is installed and run locally.
 ```sh
 git clone https://github.com/saber-games/saber-delivery-deploy
 cd ./saber-delivery-deploy/ansible
-# password generation example 
+# Password generation example 
 PASS=$(< /dev/urandom LANG= tr -dc a-zA-Z0-9 | head -c 16 && echo)
 SERVER=127.0.0.1
 
@@ -45,7 +49,7 @@ SERVER=127.0.0.1
 ansible-playbook -i $SERVER, --connection=local playbook/docker/install/docker_install.yml
 
 # Installing SD-Proxy with qBittorrent in docker-compose
-ansible-playbook -i $SERVER, --connection=local playbook/proxy/install.yml --extra-vars  '{"api_token":"<provided token>", "api_url":"<provided api url>","data_dir":"</you/data/dir>", "docker_proxy_repo":"", "qbt_password":'${PASS}'}'
+ansible-playbook -i $SERVER, --connection=local playbook/proxy/install.yml --extra-vars  '{"api_token":"<provided token>", "api_url":"<provided api url>","data_dir":"/raid/proxy", "docker_proxy_repo":"", "qbt_password":'${PASS}'}'
 
 # Optional: you can enable containers autoupdate on daily basis
 ansible-playbook -i $SERVER, --connection=local playbook/docker/containers/dc_autoupdate_containers.yml
@@ -55,9 +59,9 @@ ansible-playbook -i $SERVER, --connection=local playbook/docker/containers/dc_au
 
 ### Retracker-local based on torrust-tracker deployment
 
-- Create A or CNAME record "retracker-local.saber3d.net" in your local DNS server (domain based or caching) pointing to the server running torrust-tracker service. This is current proxy server in our case.
+- Create DNS record as instructed
 
-- Installing torrust-tracker (it is assumed that you continue with the commands from the step above)
+- Install torrust-tracker (it is assumed that you continue with the commands on the same server from the step above)
 
 ```sh
 ansible-playbook -i $SERVER, --connection=local playbook/torrust-tracker/install.yml
@@ -69,4 +73,25 @@ systemctl status torrust-tracker
 
 ## Server 2. Cache
 
+- Prepare new server
+
+- Install Ansible as described above
+
 ### SD-Cache deployment
+
+```sh
+git clone https://github.com/saber-games/saber-delivery-deploy
+cd ./saber-delivery-deploy/ansible
+# Password generation example 
+PASS=$(< /dev/urandom LANG= tr -dc a-zA-Z0-9 | head -c 16 && echo)
+SERVER=127.0.0.1
+
+# Installing Docker
+ansible-playbook -i $SERVER, --connection=local playbook/docker/install/docker_install.yml
+
+# Installing SD-Proxy with qBittorrent in docker-compose
+ansible-playbook -i $SERVER, --connection=local playbook/cache/install.yml --extra-vars  '{"self_token":"<provided token>", "api_url":"<provided api url>", "data_dir_root":"/raid", "data_dir_name":"cache", "docker_proxy_repo":"", "qbt_password":'${PASS}'}'
+
+# Optional: you can enable containers autoupdate on daily basis
+ansible-playbook -i $SERVER, --connection=local playbook/docker/containers/dc_autoupdate_containers.yml
+```

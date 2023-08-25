@@ -4,8 +4,8 @@
   vars:
     env_type: "prod"
     app_image_label: "latest"
-    api_token: "{{ undef(hint='You must specify api_token provided to the new server') }}"
-    api_url: "{{ undef(hint='You must specify api_url provided to you') }}"
+    api_token: "{{ undef(hint='You must specify api_token') }}"
+    api_url: "{{ undef(hint='You must specify api_url') }}"
     qbt_login: "proxy"
     qbt_password: "{{ undef(hint='You must specify qbt_password') }}"
     qbt_url: "http://host.docker.internal:8282"

@@ -1,0 +1,149 @@
+---
+- name: SD Cache installation in docker
+  hosts: "{{ target | default('all') }}"
+  vars:
+    app_image_label: "latest"
+    api_url: "{{ undef(hint='You must specify api_url') }}"
+    ssh_cert_name: "delivery.key"
+    self_token: "{{ undef(hint='You must specify self_token') }}"
+    self_user_server_ssh_login: "root"
+    self_user_server_ssh_cert: "/{{ ssh_cert_name }}" # map to root fs for easy managing
+    self_user_server_ssh_host: "host.docker.internal"
+    qbt_login: "root"
+    qbt_password: "{{ qbt_password_storage }}"
+    qbt_url: "http://host.docker.internal:8282"
+    # important to know parent dir of the app
+    data_dir_root: "/raid"
+    data_dir_name: "cache"
+    data_dir:  "{{ data_dir_root }}/{{ data_dir_name }}"
+    app_container_name: "sd-cache-scheduler"
+    app_dir: "{{ config_dir }}/{{ app_container_name }}"
+    app_logs_dir: "{{ app_dir}}/{{ app_container_name }}/logs"
+    app_files_dir: "{{ app_dir }}/files"
+    docker_dir: "/opt/docker"
+    docker_proxy_repo: ""
+    config_dir: "/opt/docker/data"
+    qbt_config_dir: "{{ config_dir }}/qbt/profiles/qBittorrent_docker/config" # storage qbt config
+  ignore_unreachable: yes
+
+
+  pre_tasks:
+    - name: Check qbt_password
+      assert:
+        that: qbt_password | length > 14
+        fail_msg: "Check qbt_password length, must be > 14"
+        quiet: true
+
+    - name: Check data_dir
+      assert:
+        that: data_dir is not match('.*/$')
+        fail_msg: "Remove data_dir trailing slash"
+        quiet: true
+
+
+  tasks:
+    - name: Generate idempotent password hash for qBittorrent config
+      script:
+        cmd: ./../scripts/userpass.py {{ qbt_password }}
+        executable: /usr/bin/python3
+      register: qbt_password_hashed
+
+    - debug:
+        msg: "Original pass: {{ qbt_password}}; salted hash for qbt config: {{ qbt_password_hashed.stdout_lines }}"
+
+    - name: Create dirs
+      file:
+        path: "{{ item.dest }}"
+        state: directory
+        owner: root
+        group: root
+        recurse: "{{ item.recurse }}"
+        mode: "{{ item.mode }}"
+      with_items:
+        - {
+            dest: "{{ root_data_dir }}",
+            # important for current dir, otherwise rbash will not allow ssh to homedir
+            mode: "0755", 
+            recurse: no
+          }
+        - {
+            dest: "{{ data_dir }}",
+            # important for current and parent dirs, otherwise rbash will not allow ssh to homedir
+            mode: "0755", 
+            recurse: no
+          }  
+        - {
+            dest: "{{ app_files_dir }}",
+            mode: "0644",
+            recurse: no
+          }
+        - {
+            dest: "{{ qbt_config_dir }}",
+            mode: "0644",
+            recurse: no
+          }
+
+    - name: Generate SSH key
+      community.crypto.openssh_keypair:
+        path: "{{ app_files_dir }}/{{ self_user_server_ssh_cert }}"
+        regenerate: partial_idempotence
+        size: 2048
+        type: ed25519
+        comment: "ssh-from-docker-container-to-host@{{ ansible_facts['nodename'] }}"
+
+    - name: Get pub file contents (optimized for remote hosts)
+      slurp:
+        src: "{{ app_files_dir }}/{{ self_user_server_ssh_cert }}.pub"
+      register: pub_content
+
+    - name: Add SSH key to host
+      authorized_key:
+        user: "{{ item.user }}"
+        state: present
+        manage_dir: no
+        key: "{{ item.key }}"
+        validate_certs: no
+      with_items:
+        - {
+            user: "{{ self_user_server_ssh_login }}",
+            key: "{{ pub_content.content | b64decode }}"
+          }
+      notify:
+        - Recreate containers
+
+    - name: Generate files for app
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      with_items:
+        - {
+            src: "docker-compose.yml.j2",
+            dest: "{{ docker_dir }}/docker-compose.yml",
+            mode: "0644",
+          }
+        - {
+            src: "qBittorrent.conf.j2",
+            dest: "{{ qbt_config_dir }}/qBittorrent.conf",
+            mode: "0644",
+          }
+      notify:
+        - Recreate containers
+
+    - name: Pull and recreate containers
+      community.docker.docker_compose:
+        project_src: "{{ docker_dir }}"
+        pull: yes
+        state: present
+        recreate: smart
+        # recreate: always
+
+
+  handlers:
+    - name: Recreate containers
+      community.docker.docker_compose:
+        project_src: "{{ docker_dir }}"
+        pull: yes
+        state: present
+        recreate: always
+

@@ -13,8 +13,6 @@ This application is heavily networked, so it is not deployed in the docker, but 
 
 Check if ports 6971/tcp, 6971/udp are open in OS firewall
 
-After installation create A or CNAME record "retracker-local.saber3d.net" in your local DNS server pointing to the server running torrust-tracker service
-
 qBittorrent will be restarted after installation if found in running state
 
 Check new retracker work in the qBittorrent WebUI
