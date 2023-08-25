@@ -61,7 +61,7 @@
         mode: "{{ item.mode }}"
       with_items:
         - {
-            dest: "{{ root_data_dir }}",
+            dest: "{{ data_dir }}",
             # important for current dir, otherwise rbash will not allow ssh to homedir
             mode: "0755", 
             recurse: no

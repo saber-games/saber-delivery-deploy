@@ -5,7 +5,7 @@ Make your artifacts part of a larger system.
 ## Ansible deployment
 [Official Docs](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
 
-If you don't have the Ansible service in your infrastructure, you can install it locally. If Ansible is already available and in use, you can skip this step
+If you don't have the Ansible service in your infrastructure, you can install it locally. If Ansible is already available and in use, you can skip this step.
 
 ```sh
 # for debian <12
@@ -22,7 +22,7 @@ ansible --version
 ```
 
 
-## Server 1. Proxy
+## Server 1. SD-Proxy
 
 - Prepare new server
 
@@ -30,11 +30,11 @@ ansible --version
 
 ### SD-Proxy deployment
 
-We recommend set data_dir for directory mapped on the second disk.
+We recommend set data_dir for directory mapped on the second data disk.
 
-You should get all tokens, urls before running these commands.
+You need to get all tokens, urls, etc. before running these commands.
 
-You should generate password for qBittorrent > 14 chars or use your own.
+You need to generate password for qBittorrent > 14 chars or use your own.
 
 In our example, Ansible is installed and run locally.
 
@@ -45,10 +45,10 @@ cd ./saber-delivery-deploy/ansible
 PASS=$(< /dev/urandom LANG= tr -dc a-zA-Z0-9 | head -c 16 && echo)
 SERVER=127.0.0.1
 
-# Installing Docker
+# Install Docker Engine
 ansible-playbook -i $SERVER, --connection=local playbook/docker/install/docker_install.yml
 
-# Installing SD-Proxy with qBittorrent in docker-compose
+# Install SD-Proxy app and qBittorrent in docker-compose
 ansible-playbook -i $SERVER, --connection=local playbook/proxy/install.yml --extra-vars  '{"api_token":"<provided token>", "api_url":"<provided api url>","data_dir":"/raid/proxy", "docker_proxy_repo":"", "qbt_password":'${PASS}'}'
 
 # Optional: you can enable containers autoupdate on daily basis
@@ -71,13 +71,21 @@ systemctl status torrust-tracker
 ```
 
 
-## Server 2. Cache
+## Server 2. SD-Cache
 
 - Prepare new server
 
 - Install Ansible as described above
 
 ### SD-Cache deployment
+
+We recommend set data_dir_root for directory mapped on the second data disk.
+
+You need to get all tokens, urls, etc. before running these commands.
+
+You need to generate password for qBittorrent > 14 chars or use your own.
+
+In our example, Ansible is installed and run locally.
 
 ```sh
 git clone https://github.com/saber-games/saber-delivery-deploy
@@ -86,10 +94,10 @@ cd ./saber-delivery-deploy/ansible
 PASS=$(< /dev/urandom LANG= tr -dc a-zA-Z0-9 | head -c 16 && echo)
 SERVER=127.0.0.1
 
-# Installing Docker
+# Install Docker Engine
 ansible-playbook -i $SERVER, --connection=local playbook/docker/install/docker_install.yml
 
-# Installing SD-Proxy with qBittorrent in docker-compose
+# Install SD-Cache app and qBittorrent in docker-compose
 ansible-playbook -i $SERVER, --connection=local playbook/cache/install.yml --extra-vars  '{"self_token":"<provided token>", "api_url":"<provided api url>", "data_dir_root":"/raid", "data_dir_name":"cache", "docker_proxy_repo":"", "qbt_password":'${PASS}'}'
 
 # Optional: you can enable containers autoupdate on daily basis
