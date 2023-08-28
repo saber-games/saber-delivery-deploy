@@ -18,7 +18,7 @@
     data_dir:  "{{ data_dir_root }}/{{ data_dir_name }}"
     app_container_name: "sd-cache-scheduler"
     app_dir: "{{ config_dir }}/{{ app_container_name }}"
-    app_logs_dir: "{{ app_dir}}/{{ app_container_name }}/logs"
+    app_logs_dir: "{{ app_dir}}/logs"
     app_files_dir: "{{ app_dir }}/files"
     docker_dir: "/opt/docker"
     docker_proxy_repo: ""
@@ -61,7 +61,7 @@
         mode: "{{ item.mode }}"
       with_items:
         - {
-            dest: "{{ data_dir }}",
+            dest: "{{ data_dir_root }}",
             # important for current dir, otherwise rbash will not allow ssh to homedir
             mode: "0755", 
             recurse: no
@@ -88,7 +88,7 @@
         path: "{{ app_files_dir }}/{{ self_user_server_ssh_cert }}"
         regenerate: partial_idempotence
         size: 2048
-        type: ed25519
+        type: rsa # only supported algorithm by app
         comment: "ssh-from-docker-container-to-host@{{ ansible_facts['nodename'] }}"
 
     - name: Get pub file contents (optimized for remote hosts)
