@@ -17,10 +17,13 @@
     docker_dir: "/opt/docker"
     docker_proxy_repo: ""
     config_dir: "/opt/docker/data"
-    app_logs_dir: "{{ config_dir}}/sd-proxy-scheduler/logs"
+    app_container_name: "sd-proxy-scheduler"
+    app_image: "saberinteractive/sd-proxy"
+    app_image_label: "latest"
+    app_dir: "{{ config_dir }}/{{ app_container_name }}"
+    app_logs_dir: "{{ app_dir}}/logs"
     qbt_profiles_dir: "{{ config_dir }}/qbt/profiles"
     qbt_config_dir: "{{ qbt_profiles_dir }}/qBittorrent_{{ qbt_profile_name }}/config"
-    #
   ignore_unreachable: yes
 
 

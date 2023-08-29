@@ -3,7 +3,7 @@ services:
   {{ app_container_name }}:
     container_name: {{ app_container_name }}
     hostname: {{ app_container_name }}
-    image: {{ docker_proxy_repo }}saberinteractive/sd-cache:{{ app_image_label }}
+    image: {{ docker_proxy_repo }}{{ app_image }}:{{ app_image_label }}
     restart: always
     environment:
       CONTAINER_ROLE: scheduler

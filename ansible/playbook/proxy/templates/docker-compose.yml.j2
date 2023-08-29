@@ -1,8 +1,9 @@
 version: '3.9'
 services:
-  sd-proxy-scheduler:
-    container_name: sd-proxy-scheduler
-    image: {{ docker_proxy_repo }}saberinteractive/sd-proxy:{{ app_image_label }}
+  {{ app_container_name }}:
+    container_name: {{ app_container_name }}
+    hostname: {{ app_container_name }}
+    image: {{ docker_proxy_repo }}{{ app_image }}:{{ app_image_label }}
     restart: always
     environment:
       API_TOKEN: {{ api_token }}
@@ -20,7 +21,6 @@ services:
       - {{ data_dir }}:{{ storage_path }}
     tmpfs:
       - /tmp
-      - /var/lib/php/sessions
 
   qbittorrent:
     image: {{ docker_proxy_repo }}saberinteractive/qbittorrent:latest
