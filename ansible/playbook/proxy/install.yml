@@ -3,7 +3,6 @@
   hosts: "{{ target | default('all') }}"
   vars:
     env_type: "prod"
-    app_image_label: "latest"
     api_token: "{{ undef(hint='You must specify api_token') }}"
     api_url: "{{ undef(hint='You must specify api_url') }}"
     qbt_login: "proxy"
