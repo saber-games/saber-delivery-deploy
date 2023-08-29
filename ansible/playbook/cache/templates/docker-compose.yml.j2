@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.9'
 services:
   {{ app_container_name }}:
     container_name: {{ app_container_name }}
@@ -39,12 +39,12 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime
       - /etc/timezone:/etc/timezone
-      - {{ config_dir }}/qbt/profiles:/opt/qbittorrent/profiles
+      - {{ qbt_profiles_dir }}:/opt/qbittorrent/profiles
       - {{ data_dir }}:{{ data_dir }}
     environment:
-      - QBT_PROFILE_NAME=docker
-      - QBT_PORT_WEBUI=8282
-      - QBT_PORT_NAT=1337
+      QBT_PROFILE_NAME: "{{ qbt_profile_name }}"
+      QBT_PORT_WEBUI: "{{ qbt_port_webui }}"
+      QBT_PORT_NAT: "{{ qbt_port_nat }}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     tmpfs:

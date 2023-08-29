@@ -36,9 +36,9 @@ services:
       - {{ qbt_profiles_dir }}:/opt/qbittorrent/profiles
       - {{ data_dir }}:{{ storage_path }} # this path also in qbt config
     environment:
-      QBT_PROFILE_NAME: proxy
-      QBT_PORT_WEBUI: 8282
-      QBT_PORT_NAT: 1337
+      QBT_PROFILE_NAME: {{ qbt_profile_name }}
+      QBT_PORT_WEBUI: {{ qbt_port_webui }}
+      QBT_PORT_NAT: {{ qbt_port_nat }}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     tmpfs:
