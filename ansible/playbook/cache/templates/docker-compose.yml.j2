@@ -17,6 +17,8 @@ services:
       QBT_LOGIN: "{{ qbt_login }}"
       QBT_PASSWORD: "{{ qbt_password }}"
       QBT_URL: "{{ qbt_url }}"
+      UPLOAD_HOSTNAME: "{{ upload_hostname }}"
+      UPLOAD_PORT: "{{ upload_port }}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

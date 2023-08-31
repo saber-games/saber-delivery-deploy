@@ -2,6 +2,7 @@
 - name: SD Cache installation in docker
   hosts: "{{ target | default('all') }}"
   vars:
+    # app container vars
     api_url: "{{ undef(hint='You must specify api_url') }}"
     ssh_cert_name: "delivery.key"
     self_token: "{{ undef(hint='You must specify self_token') }}"
@@ -10,10 +11,13 @@
     self_user_server_ssh_host: "host.docker.internal"
     qbt_login: "cache"
     qbt_password: "{{ undef(hint='You must specify qbt_password') }}"
+    qbt_url: "http://host.docker.internal:{{ qbt_port_webui }}"
+    upload_hostname: "{{ ansible_facts['fqdn'] }}"
+    upload_port: "22"
+    #
     qbt_profile_name: "docker"
     qbt_port_webui: "8282"
     qbt_port_nat: "1337"
-    qbt_url: "http://host.docker.internal:{{ qbt_port_webui }}"
     # important to know parent dir of the app
     data_dir_root: "/raid"
     data_dir_name: "cache"
@@ -116,7 +120,7 @@
       notify:
         - Recreate containers
 
-    - name: Generate files for app
+    - name: Generate compose files
       template:
         src: "{{ item.src }}"
         dest: "{{ item.dest }}"
@@ -127,13 +131,22 @@
             dest: "{{ docker_dir }}/docker-compose.yml",
             mode: "0644",
           }
+      notify:
+        - Recreate containers
+
+    - name: Generate config files
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      with_items:
         - {
             src: "qBittorrent.conf.j2",
             dest: "{{ qbt_config_dir }}/qBittorrent.conf",
-            mode: "0644",
+            mode: "preserve", # 0644 will set state to changed every run
           }
       notify:
-        - Recreate containers
+        - Restart containers
 
     - name: Pull and recreate containers
       community.docker.docker_compose:
@@ -151,4 +164,10 @@
         pull: yes
         state: present
         recreate: always
+
+    - name: Restart containers
+      community.docker.docker_compose:
+        project_src: "{{ docker_dir }}"
+        restarted: true
+
 

@@ -48,7 +48,7 @@
 
     - name: Print qbt password and hash
       debug:
-        msg: "Original pass: {{ qbt_password}}; salted hash for qbt config: {{ qbt_password_hashed.stdout_lines }}"
+        msg: "Original pass: {{ qbt_password}}; salted hash for qbt config: {{ qbt_password_hashed.stdout }}"
 
     - name: Create dirs
       file:
@@ -62,7 +62,7 @@
         - "{{ app_logs_dir }}"
         - "{{ qbt_config_dir }}"
 
-    - name: Generate files for app
+    - name: Generate compose files
       template:
         src: "{{ item.src }}"
         dest: "{{ item.dest }}"
@@ -73,13 +73,22 @@
             dest: "{{ docker_dir }}/docker-compose.yml",
             mode: "0644",
           }
+      notify:
+        - Recreate containers
+
+    - name: Generate config files
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      with_items:
         - {
             src: "qBittorrent.conf.j2",
             dest: "{{ qbt_config_dir }}/qBittorrent.conf",
-            mode: "0644",
+            mode: "preserve", # 0644 will set state to changed every run
           }
       notify:
-        - Recreate containers
+        - Restart containers  
 
     - name: Pull and recreate containers
       community.docker.docker_compose:
@@ -97,4 +106,10 @@
         pull: true
         state: present
         recreate: always
+
+    - name: Restart containers
+      community.docker.docker_compose:
+        project_src: "{{ docker_dir }}"
+        restarted: true
+
 
