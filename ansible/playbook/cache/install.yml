@@ -51,6 +51,20 @@
 
 
   tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - rsync
+          - openssh-server
+        state: present
+        update_cache: no
+  
+    - name: Ensure sshd service running and enabled
+      service:
+        name: sshd
+        state: started
+        enabled: yes
+    
     - name: Generate idempotent password hash for qBittorrent config
       script:
         cmd: ./../scripts/userpass.py {{ qbt_password }}
