@@ -1,4 +1,4 @@
-# https://torrust.com/torrust-tracker/config/
+# https://torrust.com/deploying-torrust-to-production
 # Do not edit ports! They are hardcoded into torrent files
 log_level = "trace"
 mode = "public"

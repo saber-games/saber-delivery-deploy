@@ -57,7 +57,8 @@
       with_items:
         - ["torrust-tracker.service"]
       notify:
-        - daemon-reload
+        - Daemon reload
+        - Restart torrust-tracker service
 
     - name: Enable torrust-tracker Systemd service
       service:
@@ -73,13 +74,14 @@
     - name: Print information about container
       debug:
         var: container_status.container.State.Status
-      when: container_status
+      when: 
+        - container_status is defined
       notify:
         - Restart qbittorrent
 
 
   handlers:
-    - name: daemon-reload
+    - name: Daemon reload
       systemd:
         daemon_reload: true
 
@@ -90,4 +92,6 @@
 
     - name: Restart qbittorrent
       command: docker restart qbittorrent
-      when: container_status.container.State.Status == "running"
+      when:
+        - container_status is defined
+        - container_status.container.State.Status == "running"

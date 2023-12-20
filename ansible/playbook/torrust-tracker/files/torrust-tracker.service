@@ -1,6 +1,6 @@
 [Unit]
-Description=retracker-local
-# After=network.target
+Description=retracker app based on torrust-tracker
+After=network.target
 
 [Service]
 Type=simple
@@ -9,6 +9,7 @@ ExecStart=/opt/torrust-tracker/torrust-tracker
 # User=root
 Restart=always
 RestartSec=10
+LimitNOFILE=32768
 
 [Install]
 WantedBy=multi-user.target
