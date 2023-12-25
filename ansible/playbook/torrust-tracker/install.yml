@@ -4,7 +4,9 @@
   #become: yes
   vars:
     exec_url: https://dl.saber3d.net/torrust-tracker/torrust-tracker
-    libssl_11_deb_url: http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb
+    #
+    # source: http://archive.ubuntu.com/ubuntu/pool/main/o/openssl
+    libssl_11_deb_url: https://dl.saber3d.net/torrust-tracker/libssl1.1_1.1.1f-1ubuntu2.20_amd64.deb
     app_dir: /opt/torrust-tracker
   tasks:
     - name: Torrust-tracker installation prerequisites for Debian < 12
